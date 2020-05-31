@@ -29,3 +29,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+spring-boot-caffeine/.mvn/
+
+spring-boot-caffeine/mvnw
+
+spring-boot-caffeine/mvnw.cmd
