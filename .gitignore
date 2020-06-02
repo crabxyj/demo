@@ -30,8 +30,10 @@ build/
 ### VS Code ###
 .vscode/
 
-spring-boot-caffeine/.mvn/
+*/.mvn/
 
-spring-boot-caffeine/mvnw
+*/mvnw
 
-spring-boot-caffeine/mvnw.cmd
+*/mvnw.cmd
+
+*/.gitignore
