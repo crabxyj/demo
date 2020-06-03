@@ -5,10 +5,13 @@ import cn.edu.zucc.crabxyj.springbootshiro.shiro.filter.JwtFilter;
 import cn.edu.zucc.crabxyj.springbootshiro.shiro.filter.PermissionsFilter;
 import cn.edu.zucc.crabxyj.springbootshiro.shiro.realm.CustomRealm;
 import cn.edu.zucc.crabxyj.springbootshiro.shiro.realm.JwtRealm;
+import cn.edu.zucc.crabxyj.springbootshiro.shiro.session.ShiroSession;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.mgt.DefaultSessionStorageEvaluator;
 import org.apache.shiro.mgt.DefaultSubjectDAO;
 import org.apache.shiro.mgt.SecurityManager;
+import org.apache.shiro.session.mgt.SessionManager;
+import org.apache.shiro.session.mgt.eis.EnterpriseCacheSessionDAO;
 import org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
@@ -54,6 +57,19 @@ public class ShiroConfig {
     }
 
     /**
+     * 自定义的 shiro session 缓存管理器，用于跨域等情况下使用 token 进行验证，不依赖于sessionId
+     * @return
+     */
+    @Bean
+    public SessionManager sessionManager(){
+        //将我们继承后重写的shiro session 注册
+        ShiroSession shiroSession = new ShiroSession();
+        //如果后续考虑多tomcat部署应用，可以使用shiro-redis开源插件来做session 的控制，或者nginx 的负载均衡
+        shiroSession.setSessionDAO(new EnterpriseCacheSessionDAO());
+        return shiroSession;
+    }
+
+    /**
      * 配置Shiro核心 安全管理器 SecurityManager
      * SecurityManager安全管理器：所有与安全有关的操作都会与SecurityManager交互；且它管理着所有Subject；负责与后边介绍的其他组件进行交互。
      * （类似于SpringMVC中的DispatcherServlet控制器）
@@ -67,13 +83,8 @@ public class ShiroConfig {
 //        securityManager.setRealms(Arrays.asList(customRealm(), jwtRealm()));
         securityManager.setRealm(customRealm());
 
-        // 关闭shiro自带的session，详情见文档
-        // http://shiro.apache.org/session-management.html#SessionManagement-StatelessApplications%28Sessionless%29
-        DefaultSubjectDAO subjectDAO = new DefaultSubjectDAO();
-        DefaultSessionStorageEvaluator defaultSessionStorageEvaluator = new DefaultSessionStorageEvaluator();
-        defaultSessionStorageEvaluator.setSessionStorageEnabled(false);
-        subjectDAO.setSessionStorageEvaluator(defaultSessionStorageEvaluator);
-        securityManager.setSubjectDAO(subjectDAO);
+        // 设置自定义session 缓存管理器
+        securityManager.setSessionManager(sessionManager());
 
         return securityManager;
     }
@@ -101,7 +112,7 @@ public class ShiroConfig {
         Map<String,String> filterChainDefinitionMap = new LinkedHashMap<>();
          // 登陆
         filterChainDefinitionMap.put("/api/auth/login/**", "anon");
-        filterChainDefinitionMap.put("/**/*", "jwt");
+        filterChainDefinitionMap.put("/**/*", "authc");
 
         shiroFilterFactoryBean.setFilterChainDefinitionMap(filterChainDefinitionMap);
 
@@ -110,6 +121,7 @@ public class ShiroConfig {
 
     /**
      * 加入注解的使用，不加入这个注解不生效
+     * 开启shiro 的AOP注解支持
      */
     @Bean
     public AuthorizationAttributeSourceAdvisor authorizationAttributeSourceAdvisor(SecurityManager securityManager) {
@@ -117,4 +129,5 @@ public class ShiroConfig {
         advisor.setSecurityManager(securityManager);
         return advisor;
     }
+
 }

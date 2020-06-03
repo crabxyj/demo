@@ -20,7 +20,7 @@ public class AccountServiceImpl extends ServiceImpl<AccountDao, BeanAccount> imp
     @Override
     public BeanAccount login(String username, String password) throws Exception {
         BeanAccount account = getByName(username);
-        if(account.getPassword().equals(password)){
+        if(account==null|| account.getPassword().equals(password)){
            throw new Exception("账号或密码错误");
         }
         return account;
@@ -28,7 +28,7 @@ public class AccountServiceImpl extends ServiceImpl<AccountDao, BeanAccount> imp
 
     public BeanAccount getByName(String username){
         QueryWrapper<BeanAccount> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("username",username);
+        queryWrapper.eq("account",username);
         return dao.selectOne(queryWrapper);
     }
 }

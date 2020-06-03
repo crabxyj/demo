@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.io.Serializable;
 
 /**
  * @author crabxyj
@@ -30,8 +31,6 @@ public class LoginController {
     public String login(String username, String password) throws Exception {
         log.info(String.format("username : %s , password : %s",username,password));
 
-        service.login(username,password);
-
         Subject subject = SecurityUtils.getSubject();
         UsernamePasswordToken token = new UsernamePasswordToken(username, password);
         try{
@@ -43,6 +42,7 @@ public class LoginController {
             e.printStackTrace();
             return "没有权限";
         }
-        return "token";
+        Serializable id = subject.getSession().getId();
+        return String.valueOf(id);
     }
 }

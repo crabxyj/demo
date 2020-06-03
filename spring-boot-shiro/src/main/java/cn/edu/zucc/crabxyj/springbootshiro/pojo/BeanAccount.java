@@ -9,7 +9,7 @@ import lombok.Data;
  * @date 2020/6/2 20:41
  */
 @Data
-@TableName("normal_account")
+@TableName("account")
 public class BeanAccount {
     @TableId
     private int id;
