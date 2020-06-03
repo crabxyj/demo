@@ -7,8 +7,6 @@ import cn.edu.zucc.crabxyj.springbootshiro.shiro.realm.CustomRealm;
 import cn.edu.zucc.crabxyj.springbootshiro.shiro.realm.JwtRealm;
 import cn.edu.zucc.crabxyj.springbootshiro.shiro.session.ShiroSession;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.shiro.mgt.DefaultSessionStorageEvaluator;
-import org.apache.shiro.mgt.DefaultSubjectDAO;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.session.mgt.SessionManager;
 import org.apache.shiro.session.mgt.eis.EnterpriseCacheSessionDAO;

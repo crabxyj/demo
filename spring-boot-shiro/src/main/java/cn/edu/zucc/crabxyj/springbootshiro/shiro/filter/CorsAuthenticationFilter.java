@@ -1,6 +1,6 @@
 package cn.edu.zucc.crabxyj.springbootshiro.shiro.filter;
 
-import com.alibaba.fastjson.JSONObject;
+import cn.edu.zucc.crabxyj.core.result.Result;
 import org.apache.shiro.web.filter.authc.FormAuthenticationFilter;
 
 import javax.servlet.ServletRequest;
@@ -42,10 +42,8 @@ public class CorsAuthenticationFilter extends FormAuthenticationFilter {
         res.setStatus(HttpServletResponse.SC_OK);
         res.setCharacterEncoding("UTF-8");
         PrintWriter writer = res.getWriter();
-        JSONObject result = new JSONObject();
-        result.put("code",-1);
-        result.put("msg","请先登录系统！");
-        writer.write(result.toJSONString());
+        Result result = Result.wrapErrorResult(-1, "请先登录系统！");
+        writer.write(result.toString());
         writer.close();
         return false;
     }

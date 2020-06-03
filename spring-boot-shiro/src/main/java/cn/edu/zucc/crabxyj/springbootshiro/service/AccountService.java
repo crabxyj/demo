@@ -1,5 +1,6 @@
 package cn.edu.zucc.crabxyj.springbootshiro.service;
 
+import cn.edu.zucc.crabxyj.core.exception.BaseException;
 import cn.edu.zucc.crabxyj.springbootshiro.pojo.BeanAccount;
 
 /**
@@ -8,6 +9,7 @@ import cn.edu.zucc.crabxyj.springbootshiro.pojo.BeanAccount;
  */
 public interface AccountService {
 
-    BeanAccount login(String username,String password) throws Exception;
+    BeanAccount login(BeanAccount account) throws BaseException;
 
+    BeanAccount register(BeanAccount account) throws BaseException;
 }

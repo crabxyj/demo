@@ -1,5 +1,7 @@
 package cn.edu.zucc.crabxyj.springbootshiro.service;
 
+import cn.edu.zucc.crabxyj.core.exception.BaseException;
+import cn.edu.zucc.crabxyj.core.utils.ExUtils;
 import cn.edu.zucc.crabxyj.springbootshiro.dao.AccountDao;
 import cn.edu.zucc.crabxyj.springbootshiro.pojo.BeanAccount;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -18,17 +20,26 @@ public class AccountServiceImpl extends ServiceImpl<AccountDao, BeanAccount> imp
     private AccountDao dao;
 
     @Override
-    public BeanAccount login(String username, String password) throws Exception {
-        BeanAccount account = getByName(username);
-        if(account==null|| account.getPassword().equals(password)){
-           throw new Exception("账号或密码错误");
+    public BeanAccount login(BeanAccount account) throws BaseException {
+        BeanAccount user = getByName(account.getAccount());
+        if(user==null|| user.getPassword().equals(account.getPassword())){
+           throw ExUtils.exAuth("账号或密码错误");
         }
         return account;
     }
 
-    public BeanAccount getByName(String username){
+    @Override
+    public BeanAccount register(BeanAccount account) throws BaseException {
+        if (getByName(account.getAccount())!=null){
+            throw ExUtils.exAuth("当前用户名已存在");
+        }
+        dao.insert(account);
+        return account;
+    }
+
+    public BeanAccount getByName(String account){
         QueryWrapper<BeanAccount> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("account",username);
+        queryWrapper.eq("account",account);
         return dao.selectOne(queryWrapper);
     }
 }

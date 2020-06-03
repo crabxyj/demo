@@ -4,7 +4,7 @@ server:
 logging:
   level:
     root: info
-    cn.edu.zucc.sso.dao: debug
+    cn.edu.zucc.crabxyj.springbootshiro.dao: debug
 
 spring:
   profiles:
