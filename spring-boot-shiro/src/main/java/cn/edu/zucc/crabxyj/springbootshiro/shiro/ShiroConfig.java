@@ -4,17 +4,19 @@ import cn.edu.zucc.crabxyj.springbootshiro.shiro.filter.CorsAuthenticationFilter
 import cn.edu.zucc.crabxyj.springbootshiro.shiro.filter.JwtFilter;
 import cn.edu.zucc.crabxyj.springbootshiro.shiro.filter.PermissionsFilter;
 import cn.edu.zucc.crabxyj.springbootshiro.shiro.realm.CustomRealm;
-import cn.edu.zucc.crabxyj.springbootshiro.shiro.realm.JwtRealm;
 import cn.edu.zucc.crabxyj.springbootshiro.shiro.session.ShiroSession;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.session.mgt.SessionManager;
-import org.apache.shiro.session.mgt.eis.EnterpriseCacheSessionDAO;
 import org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
+import org.crazycake.shiro.RedisCacheManager;
+import org.crazycake.shiro.RedisManager;
+import org.crazycake.shiro.RedisSessionDAO;
 import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -50,22 +52,46 @@ public class ShiroConfig {
         return new CustomRealm();
     }
 
-    public JwtRealm jwtRealm(){
-        return new JwtRealm();
+//    public JwtRealm jwtRealm(){
+//        return new JwtRealm();
+//    }
+
+
+    @Bean
+    @ConfigurationProperties(prefix = "spring.redis")
+    public RedisManager redisManager(){
+        return new RedisManager();
+    }
+
+    @Bean
+    public RedisCacheManager cacheManager(){
+        RedisCacheManager redisCacheManager = new RedisCacheManager();
+        redisCacheManager.setRedisManager(redisManager());
+        return redisCacheManager;
     }
 
     /**
      * 自定义的 shiro session 缓存管理器，用于跨域等情况下使用 token 进行验证，不依赖于sessionId
-     * @return
      */
     @Bean
     public SessionManager sessionManager(){
         //将我们继承后重写的shiro session 注册
         ShiroSession shiroSession = new ShiroSession();
-        //如果后续考虑多tomcat部署应用，可以使用shiro-redis开源插件来做session 的控制，或者nginx 的负载均衡
-        shiroSession.setSessionDAO(new EnterpriseCacheSessionDAO());
+        // map 管理器 new EnterpriseCacheSessionDAO() 这个好像只能在单一应用内共享
+        // redis session 管理
+        shiroSession.setSessionDAO(redisSessionDAO());
         return shiroSession;
     }
+
+
+
+    @Bean
+    public RedisSessionDAO redisSessionDAO(){
+        RedisSessionDAO redisSessionDAO = new RedisSessionDAO();
+        redisSessionDAO.setRedisManager(redisManager());
+        return redisSessionDAO;
+    }
+
 
     /**
      * 配置Shiro核心 安全管理器 SecurityManager
@@ -76,14 +102,15 @@ public class ShiroConfig {
     @Bean
     public SecurityManager securityManager() {
         DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
+        // 设置自定义session 管理器
+        securityManager.setSessionManager(sessionManager());
+        // 设置redis cache 管理器
+        securityManager.setCacheManager(cacheManager());
+
         //将自定义的realm交给SecurityManager管理
         //一定要用方法导入不能用new 不然无法注入
-//        securityManager.setRealms(Arrays.asList(customRealm(), jwtRealm()));
+//      可自定义多个  setRealms(Arrays.asList(customRealm(), jwtRealm()));
         securityManager.setRealm(customRealm());
-
-        // 设置自定义session 缓存管理器
-        securityManager.setSessionManager(sessionManager());
-
         return securityManager;
     }
 
@@ -99,7 +126,7 @@ public class ShiroConfig {
         Map<String, Filter> filterMap = shiroFilterFactoryBean.getFilters();
         filterMap.put("corsAuthenticationFilter",new CorsAuthenticationFilter());
         // 添加自己的过滤器并且取名为jwt
-        filterMap.put("jwt", new JwtFilter());
+//        filterMap.put("jwt", new JwtFilter());
         filterMap.put("perms",new PermissionsFilter());
         shiroFilterFactoryBean.setFilters(filterMap);
 
